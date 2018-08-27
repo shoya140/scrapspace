@@ -1,0 +1,17 @@
+$brand-color: #1f425c;
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+#titlebar {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  left: 0;
+  height: 23px;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+  background-color: $brand-color;
+}
