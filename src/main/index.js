@@ -1,6 +1,14 @@
 'use strict'
 
-import { app, BrowserWindow, Menu } from 'electron'
+import {app, BrowserWindow, Menu, ipcMain, session} from 'electron'
+
+import Store from 'electron-store'
+const electronStore = new Store()
+
+if (typeof electronStore.get('scrapboxToken') === 'undefined') {
+  electronStore.set('scrapboxHost', 'http://localhost:8880')
+  electronStore.set('scrapboxToken', '')
+}
 
 /**
  * Set `__static` path to static files in production
@@ -68,6 +76,15 @@ function createMenu () {
       label: app.getName(),
       submenu: [
         { role: 'about' },
+        {
+          label: 'Preferences',
+          accelerator: 'CmdOrCtrl+,',
+          click: function (item, focusedWindow) {
+            if (focusedWindow) {
+              focusedWindow.webContents.send('CmdOrCtrl+,')
+            }
+          }
+        },
         { type: 'separator' },
         { role: 'services', submenu: [] },
         { type: 'separator' },
@@ -84,7 +101,15 @@ function createMenu () {
   Menu.setApplicationMenu(menu)
 }
 
+function updateSession (host, token) {
+  const cookie = { url: host, name: 'connect.sid', value: token }
+  session.defaultSession.cookies.set(cookie, (error) => {
+    if (error) console.error(error)
+  })
+}
+
 app.on('ready', () => {
+  updateSession(electronStore.get('scrapboxHost'), electronStore.get('scrapboxToken'))
   createWindow()
   createMenu()
 })
@@ -99,6 +124,11 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
+})
+
+ipcMain.on('updateScrapboxToken', (event, msg) => {
+  updateSession(msg.host, msg.token)
+  mainWindow.reload()
 })
 
 /**
