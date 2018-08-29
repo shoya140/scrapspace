@@ -1,6 +1,6 @@
 {
   "name": "scrapbox",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "Shoya Ishimaru <shoya.ishimaru@gmail.com>",
   "description": "Scrapbox on Electron",
   "license": "MIT",

@@ -52,6 +52,13 @@ function createMenu () {
     {
       label: 'File',
       submenu: [
+        {
+          label: 'Reload Cache',
+          accelerator: 'CmdOrCtrl+s',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('Reload Cache')
+          }
+        },
         { role: 'close' }
       ]
     },

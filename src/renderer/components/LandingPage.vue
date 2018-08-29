@@ -65,7 +65,7 @@
         searchResult: [],
         currentRow: null,
         currentURL: null,
-        pageCache: null,
+        pageCache: [],
         preference: {
           host: 'https://scrapbox.io',
           project: ''
@@ -122,11 +122,27 @@
       openProject (index, row) {
         const r = this.registeredProjects[index]
         this.goTo(r.host, r.project, '')
+      },
+      reloadCache () {
+        var pages = []
+        for (const r of this.registeredProjects) {
+          this.$http
+            .get(r.host + '/api/pages/' + r.project, {withCredentials: true})
+            .then(response => {
+              if (response.status === 200) {
+                for (const page of response.data.pages) {
+                  pages.push({'host': r.host, 'project': r.project, 'title': page.title, 'content': page.title + page.descriptions.toString()})
+                }
+              }
+            })
+        }
+        this.pageCache = pages
+        electronStore.set('pageCache', JSON.stringify(pages))
+        this.$message({message: 'Reloaded page caches', type: 'success', duration: 1000})
       }
     },
     created: function () {
       this.currentURL = this.registeredProjects.length > 0 ? this.registeredProjects[0].url : 'https://scrapbox.io'
-      console.log(this.currentURL)
 
       ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
@@ -141,19 +157,9 @@
         this.showDeveloperMenu = true
       })
 
-      var pages = []
-      for (const r of this.registeredProjects) {
-        this.$http
-          .get(r.host + '/api/pages/' + r.project, {withCredentials: true})
-          .then(response => {
-            if (response.status === 200) {
-              for (const page of response.data.pages) {
-                pages.push({'host': r.host, 'project': r.project, 'title': page.title, 'content': page.title + page.descriptions.toString()})
-              }
-            }
-          })
-      }
-      this.pageCache = pages
+      ipcRenderer.on('Reload Cache', (msg) => {
+        this.reloadCache()
+      })
     }
   }
 </script>
