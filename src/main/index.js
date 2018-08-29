@@ -33,7 +33,10 @@ function createWindow () {
     height: 600,
     minHeight: 300,
     useContentSize: true,
-    titleBarStyle: 'hidden'
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      webSecurity: false
+    }
   })
 
   mainWindow.loadURL(winURL)
@@ -81,6 +84,13 @@ function createMenu () {
     {
       label: 'View',
       submenu: [
+        {
+          label: 'Cross-Search',
+          accelerator: 'CmdOrCtrl+p',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('CmdOrCtrl+p')
+          }
+        },
         { role: 'reload' },
         { role: 'forcereload' },
         { role: 'toggledevtools' }
