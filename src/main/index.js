@@ -28,9 +28,11 @@ function createWindow () {
    * Initial window options
    */
   mainWindow = new BrowserWindow({
-    height: 800,
+    width: 800,
+    minWidth: 400,
+    height: 600,
+    minHeight: 300,
     useContentSize: true,
-    width: 1000,
     titleBarStyle: 'hidden'
   })
 
@@ -58,7 +60,22 @@ function createMenu () {
         { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
         { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
         { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
-        { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' }
+        { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' },
+        { type: 'separator' },
+        {
+          label: 'Increase Indent',
+          accelerator: 'CmdOrCtrl+]',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.sendInputEvent({ type: 'keyDown', modifiers: ['control'], keyCode: 'right' })
+          }
+        },
+        {
+          label: 'Decrease Indent',
+          accelerator: 'CmdOrCtrl+[',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.sendInputEvent({type: 'keyDown', modifiers: ['control'], keyCode: 'left'})
+          }
+        }
       ]
     },
     {
@@ -67,6 +84,12 @@ function createMenu () {
         { role: 'reload' },
         { role: 'forcereload' },
         { role: 'toggledevtools' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' }
       ]
     }
   ]
