@@ -1,6 +1,6 @@
 <template>
   <div id="wrapper">
-    <webview v-bind:src="host()"></webview>
+    <webview id="scrapbox-webview" v-bind:src="host()" v-on:new-window="openOnBrowser"></webview>
       <el-dialog title="Preerences" :visible.sync="showPreferences" :width="'500px'">
       <el-form>
         <el-form-item label="URL" :label-width="'60px'">
@@ -18,7 +18,7 @@
 </template>
 
 <script>
-  import {ipcRenderer} from 'electron'
+  import {ipcRenderer, shell} from 'electron'
   import Store from 'electron-store'
 
   const electronStore = new Store()
@@ -40,6 +40,9 @@
         electronStore.set('scrapboxHost', this.scrapboxHost)
         electronStore.set('scrapboxToken', this.scrapboxToken)
         ipcRenderer.send('updateScrapboxToken', {host: this.scrapboxHost, token: this.scrapboxToken})
+      },
+      openOnBrowser (event) {
+        shell.openExternal(event.url)
       }
     },
     created: function () {
@@ -59,7 +62,7 @@
   bottom: 0;
 }
 
-webview {
+#scrapbox-webview {
   width: 100%;
   height: 100%;
 }
