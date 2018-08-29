@@ -5,8 +5,9 @@ import {app, BrowserWindow, Menu, ipcMain, session} from 'electron'
 import Store from 'electron-store'
 const electronStore = new Store()
 
-if (typeof electronStore.get('scrapboxToken') === 'undefined') {
-  electronStore.set('scrapboxHost', 'http://localhost:8880')
+if (typeof electronStore.get('registeredProjects') === 'undefined') {
+  electronStore.set('registeredProjects', [])
+  electronStore.set('scrapboxHost', '')
   electronStore.set('scrapboxToken', '')
 }
 
@@ -28,10 +29,10 @@ function createWindow () {
    * Initial window options
    */
   mainWindow = new BrowserWindow({
-    width: 800,
-    minWidth: 400,
-    height: 600,
-    minHeight: 300,
+    width: 1000,
+    minWidth: 500,
+    height: 800,
+    minHeight: 500,
     useContentSize: true,
     titleBarStyle: 'hidden',
     webPreferences: {
@@ -88,7 +89,7 @@ function createMenu () {
           label: 'Cross-Search',
           accelerator: 'CmdOrCtrl+p',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('CmdOrCtrl+p')
+            focusedWindow.webContents.send('Cross-Search')
           }
         },
         { role: 'reload' },
@@ -109,12 +110,21 @@ function createMenu () {
       label: app.getName(),
       submenu: [
         { role: 'about' },
+        { type: 'separator' },
         {
           label: 'Preferences',
           accelerator: 'CmdOrCtrl+,',
           click: function (item, focusedWindow) {
             if (focusedWindow) {
-              focusedWindow.webContents.send('CmdOrCtrl+,')
+              focusedWindow.webContents.send('Preferences')
+            }
+          }
+        },
+        {
+          label: 'Developer Menu',
+          click: function (item, focusedWindow) {
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Developer Menu')
             }
           }
         },

@@ -1,7 +1,29 @@
 <template>
   <div id="wrapper">
     <webview id="scrapbox-webview" v-bind:src="currentURL" v-on:new-window="openOnBrowser"></webview>
-    <el-dialog title="Preerences" :visible.sync="showPreferences" :width="'500px'">
+    <el-dialog id="preferences-dialog" title="Manage projects" :visible.sync="showPreferences" width="500px">
+      <el-form inline status-icon style="text-align:center;">
+        <el-form-item>
+          <el-input v-model="preference.host" placeholder="host" style="width:170px;"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="preference.project" placeholder="project" style="width:160px;"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="addProject">Add</el-button>
+        </el-form-item>
+      </el-form>
+      <el-table :data="registeredProjects" empty-text="No project" :show-header="false">
+        <el-table-column prop="url" show-overflow-tooltip />
+        <el-table-column label="Operations" width="180px">
+          <template slot-scope="scope">
+            <el-button size="mini" @click="openProject(scope.$index, scope.row)">Open</el-button>
+            <el-button size="mini" type="danger" @click="deleteProject(scope.$index, scope.row)">Delete</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+    <el-dialog title="Developer Menu" :visible.sync="showDeveloperMenu" width="500px">
       <el-form>
         <el-form-item label="URL" :label-width="'60px'">
           <el-input v-model="scrapboxHost" auto-complete="off" placeholder=""></el-input>
@@ -14,11 +36,11 @@
         <el-button type="primary" @click="showPreferences = false; updatePreferences()">Confirm</el-button>
       </span>
     </el-dialog>
-    <el-dialog title="Cross-Search" :visible.sync="showSearchPalette" :width="'500px'">
+    <el-dialog id="search-dialog" title="Cross-search" :visible.sync="showSearchPalette" width="500px">
       <el-input ref="search" v-model="searchQuery" clearable autofocus />
       <el-table :data="searchResult" highlight-current-row @cell-click="rowClicked" empty-text="No data" v-show="searchResult.length>0">
-        <el-table-column class="searchColumn" prop="project" label="Project" width="100px" show-overflow-tooltip />
-        <el-table-column class="searchColumn" prop="title" label="Title" width="360px" show-overflow-tooltip />
+        <el-table-column prop="project" label="Project" width="100px" show-overflow-tooltip />
+        <el-table-column prop="title" label="Title" width="360px" show-overflow-tooltip />
       </el-table>
     </el-dialog>
   </div>
@@ -36,13 +58,19 @@
       return {
         showPreferences: false,
         showSearchPalette: false,
+        showDeveloperMenu: false,
         searchQuery: '',
         scrapboxHost: electronStore.get('scrapboxHost'),
         scrapboxToken: electronStore.get('scrapboxToken'),
         searchResult: [],
         currentRow: null,
-        currentURL: electronStore.get('scrapboxHost', this.scrapboxHost),
-        pageCache: null
+        currentURL: null,
+        pageCache: null,
+        preference: {
+          host: 'https://scrapbox.io',
+          project: ''
+        },
+        registeredProjects: electronStore.get('registeredProjects')
       }
     },
     watch: {
@@ -74,30 +102,53 @@
       },
       goTo (host, project, page) {
         this.showSearchPalette = false
+        this.showPreferences = false
+        this.showDeveloperMenu = false
         this.currentURL = host + '/' + project + '/' + page
+      },
+      addProject () {
+        this.registeredProjects.push({
+          host: this.preference.host,
+          project: this.preference.project,
+          url: this.preference.host + '/' + this.preference.project + '/'})
+        electronStore.set('registeredProjects', this.registeredProjects)
+        this.preference.host = 'https://scrapbox.io'
+        this.preference.project = ''
+      },
+      deleteProject (index, row) {
+        this.registeredProjects.splice(index, 1)
+        electronStore.set('registeredProjects', this.registeredProjects)
+      },
+      openProject (index, row) {
+        const r = this.registeredProjects[index]
+        this.goTo(r.host, r.project, '')
       }
     },
     created: function () {
-      ipcRenderer.on('CmdOrCtrl+,', (msg) => {
+      this.currentURL = this.registeredProjects.length > 0 ? this.registeredProjects[0].url : 'https://scrapbox.io'
+      console.log(this.currentURL)
+
+      ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
       })
 
-      ipcRenderer.on('CmdOrCtrl+p', (msg) => {
+      ipcRenderer.on('Cross-Search', (msg) => {
         this.searchQuery = ''
         this.showSearchPalette = true
       })
 
-      const host = electronStore.get('scrapboxHost', this.scrapboxHost)
-      const projects = ['private']
+      ipcRenderer.on('Developer Menu', (msg) => {
+        this.showDeveloperMenu = true
+      })
 
       var pages = []
-      for (const project of projects) {
+      for (const r of this.registeredProjects) {
         this.$http
-          .get(host + '/api/pages/' + project, {withCredentials: true})
+          .get(r.host + '/api/pages/' + r.project, {withCredentials: true})
           .then(response => {
             if (response.status === 200) {
               for (const page of response.data.pages) {
-                pages.push({'host': host, 'project': project, 'title': page.title, 'content': page.title + page.descriptions.toString()})
+                pages.push({'host': r.host, 'project': r.project, 'title': page.title, 'content': page.title + page.descriptions.toString()})
               }
             }
           })
@@ -121,7 +172,16 @@
   height: 100%;
 }
 
-.el-table__body-wrapper {
-  cursor: pointer;
+#preferences-dialog {
+  .el-dialog {
+    min-height: 250px;
+  }
 }
+
+#search-dialog {
+  .el-table__body-wrapper {
+    cursor: pointer;
+  }
+}
+
 </style>
