@@ -155,8 +155,17 @@
       }
     },
     created: function () {
-      this.currentURL = this.registeredProjects.length > 0 ? this.registeredProjects[0].url : 'https://scrapbox.io'
-      this.reloadPageCache()
+      if (this.registeredProjects.length > 0) {
+        this.currentURL = this.registeredProjects[0].url
+        this.reloadPageCache()
+      } else {
+        this.currentURL = 'https://scrapbox.io'
+        this.$notify({
+          title: 'Welcome to Scrapspace :)',
+          message: 'Open Preferences and register your project.',
+          duration: 10000
+        })
+      }
 
       ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
