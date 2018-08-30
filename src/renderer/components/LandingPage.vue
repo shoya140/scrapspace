@@ -1,6 +1,6 @@
 <template>
   <div id="wrapper">
-    <webview id="scrapbox-webview" v-bind:src="currentURL" v-on:new-window="openOnBrowser"></webview>
+    <webview id="scrapbox-webview" v-on:new-window="openOnBrowser"></webview>
     <el-dialog id="preferences-dialog" title="Manage projects" :visible.sync="showPreferences" width="500px">
       <el-form inline status-icon style="text-align:center;">
         <el-form-item>
@@ -77,7 +77,6 @@
         scrapboxToken: electronStore.get('scrapboxToken'),
         searchResult: [],
         currentRow: null,
-        currentURL: null,
         nextURL: null,
         pageCache: [],
         preference: {
@@ -123,12 +122,12 @@
         shell.openExternal(event.url)
       },
       rowClicked (val) {
-        this.goTo(val.host, val.project, val.title)
+        this.goTo(val.host + '/' + val.project + '/' + val.title)
       },
       searchKeyEnter (e) {
         if (this.currentRow != null) {
           const r = this.searchResult[this.currentRow]
-          this.goTo(r.host, r.project, r.title)
+          this.goTo(r.host + '/' + r.project + '/' + r.title)
         }
       },
       searchKeyDown (e) {
@@ -149,12 +148,12 @@
           this.$refs.searchTable.setCurrentRow()
         }
       },
-      goTo (host, project, page) {
+      goTo (url) {
         this.showSearchPalette = false
         this.showPreferences = false
         this.showDeveloperMenu = false
         this.showOpenURL = false
-        this.currentURL = host + '/' + project + '/' + page
+        document.getElementById('scrapbox-webview').src = url
       },
       addProject () {
         this.registeredProjects.push({
@@ -170,10 +169,6 @@
         this.registeredProjects.splice(index, 1)
         electronStore.set('registeredProjects', this.registeredProjects)
         this.reloadPageCache()
-      },
-      openProject (index, row) {
-        const r = this.registeredProjects[index]
-        this.goTo(r.host, r.project, '')
       },
       reloadPageCache () {
         this.pageCacheProgress = 0
@@ -193,28 +188,16 @@
         this.pageCache = pages
       },
       openURL () {
-        this.showSearchPalette = false
-        this.showPreferences = false
-        this.showDeveloperMenu = false
-        this.showOpenURL = false
-        this.currentURL = this.nextURL
+        this.goTo(this.nextURL)
       }
     },
     created: function () {
-      if (this.registeredProjects.length > 0) {
-        this.currentURL = this.registeredProjects[0].url
-        this.reloadPageCache()
-      } else {
-        this.currentURL = 'https://scrapbox.io'
-        this.$notify({
-          title: 'Welcome to Scrapspace :)',
-          message: 'Open Preferences and register your project.',
-          duration: 10000
-        })
-      }
-
       ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
+      })
+
+      ipcRenderer.on('New Page', (msg) => {
+        document.getElementById('scrapbox-webview').executeJavaScript('document.getElementsByClassName("new-button")[0].click()')
       })
 
       ipcRenderer.on('Open URL', (msg) => {
@@ -240,6 +223,20 @@
       ipcRenderer.on('Reload Page Cache', (msg) => {
         this.reloadPageCache()
       })
+    },
+    mounted: function () {
+      if (this.registeredProjects.length > 0) {
+        const r = this.registeredProjects[0]
+        this.goTo(r.host + '/' + r.project + '/')
+        this.reloadPageCache()
+      } else {
+        this.goTo('https://scrapbox.io')
+        this.$notify({
+          title: 'Welcome to Scrapspace :)',
+          message: 'Open Preferences and register your project.',
+          duration: 10000
+        })
+      }
     }
   }
 </script>

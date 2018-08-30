@@ -53,10 +53,10 @@ function createMenu () {
       label: 'File',
       submenu: [
         {
-          label: 'Open URL',
-          accelerator: 'CmdOrCtrl+o',
+          label: 'New Page',
+          accelerator: 'CmdOrCtrl+n',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('Open URL')
+            focusedWindow.webContents.send('New Page')
           }
         },
         { role: 'close' }
@@ -92,6 +92,13 @@ function createMenu () {
     {
       label: 'View',
       submenu: [
+        {
+          label: 'Open URL',
+          accelerator: 'CmdOrCtrl+o',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('Open URL')
+          }
+        },
         {
           label: 'Cross-Search',
           accelerator: 'CmdOrCtrl+p',
