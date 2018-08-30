@@ -6,7 +6,7 @@
 
 <script>
   export default {
-    name: 'scrapbox'
+    name: 'Scrapspace'
   }
 </script>
 

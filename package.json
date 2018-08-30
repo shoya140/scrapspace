@@ -1,8 +1,8 @@
 {
-  "name": "scrapbox",
+  "name": "scrapspace",
   "version": "0.0.5",
   "author": "Shoya Ishimaru <shoya.ishimaru@gmail.com>",
-  "description": "Scrapbox on Electron",
+  "description": "Workspace for Scrapbox",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "postinstall": "npm run lint:fix"
   },
   "build": {
-    "productName": "Scrapbox",
+    "productName": "Scrapspace",
     "appId": "org.simulatedgreg.electron-vue",
     "directories": {
       "output": "build"

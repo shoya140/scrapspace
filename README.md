@@ -1,4 +1,4 @@
-# Scrapbox on Electron
+# Scrapspace
 
 ## Build Setup
 
