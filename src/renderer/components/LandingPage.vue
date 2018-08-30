@@ -43,6 +43,7 @@
         <el-table-column prop="title" label="Title" width="360px" show-overflow-tooltip />
       </el-table>
     </el-dialog>
+    <el-progress id="page-cache-progress" type="circle" :percentage="pageCacheProgress" :width="20" :stroke-width="4" :show-text="false" v-show="showPageCacheProgress"></el-progress>
   </div>
 </template>
 
@@ -70,7 +71,9 @@
           host: 'https://scrapbox.io',
           project: ''
         },
-        registeredProjects: electronStore.get('registeredProjects')
+        registeredProjects: electronStore.get('registeredProjects'),
+        pageCacheProgress: 0,
+        showPageCacheProgress: false
       }
     },
     watch: {
@@ -86,6 +89,14 @@
           }
         }
         this.searchResult = result
+      },
+      pageCacheProgress: function (val) {
+        this.showPageCacheProgress = true
+        if (val === 100) {
+          setTimeout(() => {
+            this.showPageCacheProgress = false
+          }, 1000)
+        }
       }
     },
     methods: {
@@ -114,16 +125,19 @@
         electronStore.set('registeredProjects', this.registeredProjects)
         this.preference.host = 'https://scrapbox.io'
         this.preference.project = ''
+        this.reloadPageCache()
       },
       deleteProject (index, row) {
         this.registeredProjects.splice(index, 1)
         electronStore.set('registeredProjects', this.registeredProjects)
+        this.reloadPageCache()
       },
       openProject (index, row) {
         const r = this.registeredProjects[index]
         this.goTo(r.host, r.project, '')
       },
-      reloadCache () {
+      reloadPageCache () {
+        this.pageCacheProgress = 0
         var pages = []
         for (const r of this.registeredProjects) {
           this.$http
@@ -134,15 +148,15 @@
                   pages.push({'host': r.host, 'project': r.project, 'title': page.title, 'content': page.title + page.descriptions.toString()})
                 }
               }
+              this.pageCacheProgress += (100 / this.registeredProjects.length)
             })
         }
         this.pageCache = pages
-        electronStore.set('pageCache', JSON.stringify(pages))
-        this.$message({message: 'Reloaded page caches', type: 'success', duration: 1000})
       }
     },
     created: function () {
       this.currentURL = this.registeredProjects.length > 0 ? this.registeredProjects[0].url : 'https://scrapbox.io'
+      this.reloadPageCache()
 
       ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
@@ -157,8 +171,8 @@
         this.showDeveloperMenu = true
       })
 
-      ipcRenderer.on('Reload Cache', (msg) => {
-        this.reloadCache()
+      ipcRenderer.on('Reload Page Cache', (msg) => {
+        this.reloadPageCache()
       })
     }
   }
@@ -188,6 +202,14 @@
   .el-table__body-wrapper {
     cursor: pointer;
   }
+}
+
+#page-cache-progress {
+  position: absolute;
+  left: 10px;
+  bottom: 5px;
+  z-index: 10;
+  opacity: 0.9;
 }
 
 </style>

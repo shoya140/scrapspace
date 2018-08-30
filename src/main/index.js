@@ -52,13 +52,6 @@ function createMenu () {
     {
       label: 'File',
       submenu: [
-        {
-          label: 'Reload Cache',
-          accelerator: 'CmdOrCtrl+s',
-          click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('Reload Cache')
-          }
-        },
         { role: 'close' }
       ]
     },
@@ -100,7 +93,14 @@ function createMenu () {
           }
         },
         { role: 'reload' },
-        { role: 'forcereload' },
+        {
+          label: 'Reload Page Cache',
+          accelerator: 'Shift+CmdOrCtrl+r',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('Reload Page Cache')
+          }
+        },
+        { type: 'separator' },
         { role: 'toggledevtools' }
       ]
     },
