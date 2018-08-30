@@ -15,10 +15,9 @@
       </el-form>
       <el-table :data="registeredProjects" empty-text="No project" :show-header="false">
         <el-table-column prop="url" show-overflow-tooltip />
-        <el-table-column label="Operations" width="180px">
+        <el-table-column label="Operations" width="100px">
           <template slot-scope="scope">
-            <el-button size="mini" @click="openProject(scope.$index, scope.row)">Open</el-button>
-            <el-button size="mini" type="danger" @click="deleteProject(scope.$index, scope.row)">Delete</el-button>
+            <el-button size="mini" @click="deleteProject(scope.$index, scope.row)">Delete</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -35,6 +34,16 @@
       <span slot="footer" class="dialog-footer">
         <el-button type="primary" @click="showPreferences = false; updatePreferences()">Confirm</el-button>
       </span>
+    </el-dialog>
+    <el-dialog title="Open URL" :visible.sync="showOpenURL" width="500px">
+      <el-form @submit.native.prevent="openURL" inline style="text-align:center;">
+        <el-form-item>
+          <el-input ref="open" v-model="nextURL" placeholder="https://scrapbox.io" style="width:340px;"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="openURL">Open</el-button>
+        </el-form-item>
+      </el-form>
     </el-dialog>
     <el-dialog id="search-dialog" title="Cross-search" :visible.sync="showSearchPalette" width="500px">
       <el-form @submit.native.prevent="searchKeyEnter">
@@ -62,12 +71,14 @@
         showPreferences: false,
         showSearchPalette: false,
         showDeveloperMenu: false,
+        showOpenURL: false,
         searchQuery: '',
         scrapboxHost: electronStore.get('scrapboxHost'),
         scrapboxToken: electronStore.get('scrapboxToken'),
         searchResult: [],
         currentRow: null,
         currentURL: null,
+        nextURL: null,
         pageCache: [],
         preference: {
           host: 'https://scrapbox.io',
@@ -142,6 +153,7 @@
         this.showSearchPalette = false
         this.showPreferences = false
         this.showDeveloperMenu = false
+        this.showOpenURL = false
         this.currentURL = host + '/' + project + '/' + page
       },
       addProject () {
@@ -179,6 +191,13 @@
             })
         }
         this.pageCache = pages
+      },
+      openURL () {
+        this.showSearchPalette = false
+        this.showPreferences = false
+        this.showDeveloperMenu = false
+        this.showOpenURL = false
+        this.currentURL = this.nextURL
       }
     },
     created: function () {
@@ -196,6 +215,14 @@
 
       ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
+      })
+
+      ipcRenderer.on('Open URL', (msg) => {
+        this.nextURL = document.getElementById('scrapbox-webview').getURL()
+        this.showOpenURL = true
+        setTimeout(() => {
+          this.$refs.open.focus()
+        }, 0)
       })
 
       ipcRenderer.on('Cross-Search', (msg) => {

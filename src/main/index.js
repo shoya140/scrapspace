@@ -52,6 +52,13 @@ function createMenu () {
     {
       label: 'File',
       submenu: [
+        {
+          label: 'Open URL',
+          accelerator: 'CmdOrCtrl+o',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('Open URL')
+          }
+        },
         { role: 'close' }
       ]
     },
