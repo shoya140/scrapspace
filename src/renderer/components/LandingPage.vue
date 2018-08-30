@@ -37,8 +37,10 @@
       </span>
     </el-dialog>
     <el-dialog id="search-dialog" title="Cross-search" :visible.sync="showSearchPalette" width="500px">
-      <el-input ref="search" v-model="searchQuery" clearable autofocus />
-      <el-table :data="searchResult" highlight-current-row @cell-click="rowClicked" empty-text="No data" v-show="searchResult.length>0">
+      <el-form @submit.native.prevent="searchKeyEnter">
+      <el-input ref="search" v-model="searchQuery" clearable @keyup.down.native="searchKeyDown" @keyup.up.native="searchKeyUp" />
+      </el-form>
+      <el-table ref="searchTable" :data="searchResult" highlight-current-row  @cell-click="rowClicked" empty-text="No data" v-show="searchResult.length>0">
         <el-table-column prop="project" label="Project" width="100px" show-overflow-tooltip />
         <el-table-column prop="title" label="Title" width="360px" show-overflow-tooltip />
       </el-table>
@@ -89,6 +91,7 @@
           }
         }
         this.searchResult = result
+        this.updateCurrentRow(this.searchResult.length > 0 ? 0 : null)
       },
       pageCacheProgress: function (val) {
         this.showPageCacheProgress = true
@@ -110,6 +113,30 @@
       },
       rowClicked (val) {
         this.goTo(val.host, val.project, val.title)
+      },
+      searchKeyEnter (e) {
+        if (this.currentRow != null) {
+          const r = this.searchResult[this.currentRow]
+          this.goTo(r.host, r.project, r.title)
+        }
+      },
+      searchKeyDown (e) {
+        if (this.currentRow != null && this.currentRow < this.searchResult.length - 1) {
+          this.updateCurrentRow(this.currentRow + 1)
+        }
+      },
+      searchKeyUp (e) {
+        if (this.currentRow != null && this.currentRow > 0) {
+          this.updateCurrentRow(this.currentRow - 1)
+        }
+      },
+      updateCurrentRow (val) {
+        this.currentRow = val
+        if (val != null) {
+          this.$refs.searchTable.setCurrentRow(this.searchResult[val])
+        } else {
+          this.$refs.searchTable.setCurrentRow()
+        }
       },
       goTo (host, project, page) {
         this.showSearchPalette = false
@@ -174,6 +201,9 @@
       ipcRenderer.on('Cross-Search', (msg) => {
         this.searchQuery = ''
         this.showSearchPalette = true
+        setTimeout(() => {
+          this.$refs.search.focus()
+        }, 0)
       })
 
       ipcRenderer.on('Developer Menu', (msg) => {
