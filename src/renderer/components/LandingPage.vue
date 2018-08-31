@@ -15,9 +15,10 @@
       </el-form>
       <el-table :data="registeredProjects" empty-text="No project" :show-header="false">
         <el-table-column prop="url" show-overflow-tooltip />
-        <el-table-column label="Operations" width="100px">
+        <el-table-column label="Operations" width="180px">
           <template slot-scope="scope">
-            <el-button size="mini" @click="deleteProject(scope.$index, scope.row)">Delete</el-button>
+            <el-button size="mini" @click="openProject(scope.$index, scope.row)">Open</el-button>
+            <el-button size="mini" type="danger" @click="deleteProject(scope.$index, scope.row)">Delete</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -169,6 +170,9 @@
         this.registeredProjects.splice(index, 1)
         electronStore.set('registeredProjects', this.registeredProjects)
         this.reloadPageCache()
+      },
+      openProject (index, row) {
+        this.goTo(this.registeredProjects[index].url)
       },
       reloadPageCache () {
         this.pageCacheProgress = 0

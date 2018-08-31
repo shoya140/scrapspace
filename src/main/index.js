@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow
+var windows = []
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
@@ -28,7 +28,7 @@ function createWindow () {
   /**
    * Initial window options
    */
-  mainWindow = new BrowserWindow({
+  let window = new BrowserWindow({
     width: 1000,
     minWidth: 500,
     height: 800,
@@ -40,11 +40,13 @@ function createWindow () {
     }
   })
 
-  mainWindow.loadURL(winURL)
+  window.loadURL(winURL)
 
-  mainWindow.on('closed', () => {
-    mainWindow = null
+  window.on('closed', () => {
+    windows.filter(x => x !== window)
   })
+
+  windows.push(window)
 }
 
 function createMenu () {
@@ -57,6 +59,13 @@ function createMenu () {
           accelerator: 'CmdOrCtrl+n',
           click: function (item, focusedWindow) {
             focusedWindow.webContents.send('New Page')
+          }
+        },
+        {
+          label: 'New Window',
+          accelerator: 'Shift+CmdOrCtrl+n',
+          click: function (item, focusedWindow) {
+            createWindow()
           }
         },
         { role: 'close' }
@@ -184,15 +193,8 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
-
 ipcMain.on('updateScrapboxToken', (event, msg) => {
   updateSession(msg.host, msg.token)
-  mainWindow.reload()
 })
 
 /**
