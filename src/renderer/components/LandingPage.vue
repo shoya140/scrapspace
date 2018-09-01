@@ -1,6 +1,10 @@
 <template>
   <div id="wrapper">
-    <webview id="scrapbox-webview" v-on:new-window="openOnBrowser"></webview>
+    <el-tabs v-model="currentTab" type="border-card" editable stretch @edit="handleTabsEdit">
+      <el-tab-pane v-for="(item, index) in tabs" :key="item.name" :name="item.name" :label="item.url">
+        <webview v-bind:src="item.url" class="scrapbox-webview" v-on:new-window="openOnBrowser"></webview>
+      </el-tab-pane>
+    </el-tabs>
     <el-dialog id="preferences-dialog" title="Manage projects" :visible.sync="showPreferences" width="500px">
       <el-form inline status-icon style="text-align:center;">
         <el-form-item>
@@ -69,6 +73,8 @@
     name: 'landing-page',
     data: function () {
       return {
+        tabs: [],
+        currentTab: '-1',
         showPreferences: false,
         showSearchPalette: false,
         showDeveloperMenu: false,
@@ -113,6 +119,11 @@
         }
       }
     },
+    computed: {
+      webView: function () {
+        return document.getElementsByClassName('scrapbox-webview')[this.currentTab]
+      }
+    },
     methods: {
       updatePreferences () {
         electronStore.set('scrapboxHost', this.scrapboxHost)
@@ -154,7 +165,7 @@
         this.showPreferences = false
         this.showDeveloperMenu = false
         this.showOpenURL = false
-        document.getElementById('scrapbox-webview').src = url
+        this.webView.src = url
       },
       addProject () {
         this.registeredProjects.push({
@@ -193,6 +204,55 @@
       },
       openURL () {
         this.goTo(this.nextURL)
+      },
+      addTab () {
+        var url = ''
+        if (this.registeredProjects.length > 0) {
+          const r = this.registeredProjects[0]
+          url = r.host + '/' + r.project + '/'
+          this.reloadPageCache()
+        } else {
+          url = 'https://scrapbox.io'
+          this.$notify({
+            title: 'Welcome to Scrapspace :)',
+            message: 'Open Preferences and register your project.',
+            duration: 10000
+          })
+        }
+        let newTabName = ++this.currentTab + ''
+        this.tabs.push({
+          name: newTabName,
+          url: url
+        })
+        this.currentTab = newTabName
+      },
+      closeTab (targetName) {
+        let tabs = this.tabs
+        let activeName = this.currentTab
+        if (activeName === targetName) {
+          tabs.forEach((tab, index) => {
+            if (tab.name === targetName) {
+              let nextTab = tabs[index + 1] || tabs[index - 1]
+              if (nextTab) {
+                activeName = nextTab.name
+              }
+            }
+          })
+        }
+        this.currentTab = activeName
+        this.tabs = tabs.filter(tab => tab.name !== targetName)
+        console.log(this.currentTab)
+        if (this.tabs.length === 0) {
+          ipcRenderer.send('closeWindow', null)
+        }
+      },
+      handleTabsEdit (targetName, action) {
+        if (action === 'add') {
+          this.addTab()
+        }
+        if (action === 'remove') {
+          this.closeTab(targetName)
+        }
       }
     },
     created: function () {
@@ -201,11 +261,19 @@
       })
 
       ipcRenderer.on('New Page', (msg) => {
-        document.getElementById('scrapbox-webview').executeJavaScript('document.getElementsByClassName("new-button")[0].click()')
+        this.webView.executeJavaScript('document.getElementsByClassName("new-button")[0].click()')
+      })
+
+      ipcRenderer.on('New Tab', (msg) => {
+        this.addTab()
+      })
+
+      ipcRenderer.on('Close Tab', (msg) => {
+        this.closeTab(this.currentTab)
       })
 
       ipcRenderer.on('Open URL', (msg) => {
-        this.nextURL = document.getElementById('scrapbox-webview').getURL()
+        this.nextURL = this.webView.getURL()
         this.showOpenURL = true
         setTimeout(() => {
           this.$refs.open.focus()
@@ -229,32 +297,74 @@
       })
     },
     mounted: function () {
-      if (this.registeredProjects.length > 0) {
-        const r = this.registeredProjects[0]
-        this.goTo(r.host + '/' + r.project + '/')
-        this.reloadPageCache()
-      } else {
-        this.goTo('https://scrapbox.io')
-        this.$notify({
-          title: 'Welcome to Scrapspace :)',
-          message: 'Open Preferences and register your project.',
-          duration: 10000
-        })
-      }
+      this.addTab()
     }
   }
 </script>
 
 <style lang="scss">
-#wrapper {
-  position: absolute;
-  top: 23px;
-  left: 0;
+
+$tab-margin: 4px;
+
+.el-tabs__header {
+  top: 0;
+  left: 78px;
   right: 0;
-  bottom: 0;
+  height: $titlebar-height;
+  position: fixed;
+  z-index: 10;
 }
 
-#scrapbox-webview {
+.el-tabs--border-card>.el-tabs__header {
+  background-color: $brand-color;
+  border-bottom: solid 1px darken($brand-color, 10%);
+  .el-tabs__item.is-active {
+    background-color: darken($brand-color, 10%);
+    border-left: solid 1px darken($brand-color, 10%);
+    border-right: solid 1px darken($brand-color, 10%);
+    border-radius: 3px 3px 0 0;
+  }
+  .el-tabs__item {
+    margin: $tab-margin 0 0 0;
+    font-size: 12px;
+    height: $titlebar-height - $tab-margin;
+    line-height: $titlebar-height - $tab-margin;
+    color: #dddddd;
+    &:not(.is-disabled):hover {
+      color: #ffffff;
+    }
+    &.is-active {
+      color: #dddddd;
+    }
+  }
+}
+
+.el-tabs__new-tab {
+  margin: 10px;
+  font-size: 20px;
+  width: 26px;
+  height: 20px;
+  border-style: none;
+  &:hover {
+    color: #ffffff;
+  }
+}
+
+.el-tabs, .el-tabs__content, .el-tab-pane {
+  height: 100%;
+}
+
+.el-tabs--border-card>.el-tabs__content {
+  position: absolute;
+  top: $titlebar-height;
+  right: 0;
+  left: 0;
+  padding: 0;
+  height: calc(100% - #{$titlebar-height+1});
+  border-top: solid 1px darken($brand-color, 10%);
+}
+
+.scrapbox-webview {
   width: 100%;
   height: 100%;
 }

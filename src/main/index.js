@@ -34,7 +34,7 @@ function createWindow () {
     height: 800,
     minHeight: 500,
     useContentSize: true,
-    titleBarStyle: 'hidden',
+    titleBarStyle: 'hiddenInset',
     webPreferences: {
       webSecurity: false
     }
@@ -68,7 +68,20 @@ function createMenu () {
             createWindow()
           }
         },
-        { role: 'close' }
+        {
+          label: 'New Tab',
+          accelerator: 'CmdOrCtrl+t',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('New Tab')
+          }
+        },
+        {
+          label: 'Close Tab',
+          accelerator: 'CmdOrCtrl+w',
+          click: function (item, focusedWindow) {
+            focusedWindow.webContents.send('Close Tab')
+          }
+        }
       ]
     },
     {
@@ -195,6 +208,10 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('updateScrapboxToken', (event, msg) => {
   updateSession(msg.host, msg.token)
+})
+
+ipcMain.on('closeWindow', (event, msg) => {
+  BrowserWindow.getFocusedWindow().close()
 })
 
 /**
