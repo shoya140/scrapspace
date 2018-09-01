@@ -242,7 +242,6 @@
         }
         this.currentTab = activeName
         this.tabs = tabs.filter(tab => tab.name !== targetName)
-        console.log(this.currentTab)
         if (this.tabs.length === 0) {
           ipcRenderer.send('closeWindow', null)
         }
