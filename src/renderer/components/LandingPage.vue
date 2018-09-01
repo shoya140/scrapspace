@@ -8,13 +8,14 @@
     <el-dialog id="preferences-dialog" title="Manage projects" :visible.sync="showPreferences" width="500px">
       <el-form inline status-icon style="text-align:center;">
         <el-form-item>
-          <el-input v-model="preference.host" placeholder="host" style="width:170px;"></el-input>
+          <el-input size="small" v-model="preference.host" placeholder="host" style="width:160px;"></el-input>
+        </el-form-item>
+        <span class="form-slash">/</span>
+        <el-form-item>
+          <el-input size="small" v-model="preference.project" placeholder="project" style="width:170px;" ref="project"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-input v-model="preference.project" placeholder="project" style="width:160px;"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="addProject">Add</el-button>
+          <el-button size="small" type="primary" @click="addProject" :disabled="preference.project.length===0">Register</el-button>
         </el-form-item>
       </el-form>
       <el-table :data="registeredProjects" empty-text="No project" :show-header="false">
@@ -22,7 +23,7 @@
         <el-table-column label="Operations" width="180px">
           <template slot-scope="scope">
             <el-button size="mini" @click="openProject(scope.$index, scope.row)">Open</el-button>
-            <el-button size="mini" type="danger" @click="deleteProject(scope.$index, scope.row)">Delete</el-button>
+            <el-button size="mini" type="danger" @click="removeProject(scope.$index, scope.row)">Remove</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -37,7 +38,7 @@
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="showPreferences = false; updatePreferences()">Confirm</el-button>
+        <el-button type="primary" @click="showPreferences = false; updatePreferences()">Login</el-button>
       </span>
     </el-dialog>
     <el-dialog title="Open URL" :visible.sync="showOpenURL" width="500px">
@@ -177,7 +178,7 @@
         this.preference.project = ''
         this.reloadPageCache()
       },
-      deleteProject (index, row) {
+      removeProject (index, row) {
         this.registeredProjects.splice(index, 1)
         electronStore.set('registeredProjects', this.registeredProjects)
         this.reloadPageCache()
@@ -258,6 +259,9 @@
     created: function () {
       ipcRenderer.on('Preferences', (msg) => {
         this.showPreferences = true
+        setTimeout(() => {
+          this.$refs.project.focus()
+        }, 0)
       })
 
       ipcRenderer.on('New Page', (msg) => {
@@ -387,6 +391,13 @@ $tab-margin: 4px;
   bottom: 5px;
   z-index: 10;
   opacity: 0.9;
+}
+
+.form-slash {
+  margin-left:-10px; 
+  line-height: 42px; 
+  font-size: 20px; 
+  color:#dddddd;
 }
 
 </style>
