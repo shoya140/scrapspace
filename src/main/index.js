@@ -20,6 +20,7 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 var windows = []
+var tabs = {}
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
@@ -46,10 +47,14 @@ function createWindow () {
     windows.filter(x => x !== window)
   })
 
+  window.on('focus', (val) => {
+    createMenu(window.id)
+  })
+
   windows.push(window)
 }
 
-function createMenu () {
+function createMenu (winID) {
   const template = [
     {
       label: 'File',
@@ -58,7 +63,9 @@ function createMenu () {
           label: 'New Page',
           accelerator: 'CmdOrCtrl+n',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('New Page')
+            if (focusedWindow) {
+              focusedWindow.webContents.send('New Page')
+            }
           }
         },
         {
@@ -68,18 +75,28 @@ function createMenu () {
             createWindow()
           }
         },
+        { type: 'separator' },
         {
           label: 'New Tab',
           accelerator: 'CmdOrCtrl+t',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('New Tab')
+            if (focusedWindow) {
+              focusedWindow.webContents.send('New Tab')
+            }
           }
         },
         {
           label: 'Close Tab',
           accelerator: 'CmdOrCtrl+w',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('Close Tab')
+            if (focusedWindow == null) {
+              return
+            }
+            if (tabs[focusedWindow.id].length > 1) {
+              focusedWindow.webContents.send('Close Tab')
+            } else {
+              focusedWindow.close()
+            }
           }
         }
       ]
@@ -99,14 +116,18 @@ function createMenu () {
           label: 'Increase Indent',
           accelerator: 'CmdOrCtrl+]',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.sendInputEvent({ type: 'keyDown', modifiers: ['control'], keyCode: 'right' })
+            if (focusedWindow) {
+              focusedWindow.webContents.sendInputEvent({ type: 'keyDown', modifiers: ['control'], keyCode: 'right' })
+            }
           }
         },
         {
           label: 'Decrease Indent',
           accelerator: 'CmdOrCtrl+[',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.sendInputEvent({type: 'keyDown', modifiers: ['control'], keyCode: 'left'})
+            if (focusedWindow) {
+              focusedWindow.webContents.sendInputEvent({type: 'keyDown', modifiers: ['control'], keyCode: 'left'})
+            }
           }
         }
       ]
@@ -118,26 +139,40 @@ function createMenu () {
           label: 'Open URL',
           accelerator: 'CmdOrCtrl+o',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('Open URL')
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Open URL')
+            }
           }
         },
         {
           label: 'Cross-Search',
           accelerator: 'CmdOrCtrl+p',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('Cross-Search')
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Cross-Search')
+            }
           }
         },
-        { role: 'reload' },
+        { type: 'separator' },
+        {
+          label: 'Reload Page',
+          accelerator: 'CmdOrCtrl+r',
+          click: function (item, focusedWindow) {
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Reload Page')
+            }
+          }
+        },
         {
           label: 'Reload Page Cache',
           accelerator: 'Shift+CmdOrCtrl+r',
           click: function (item, focusedWindow) {
-            focusedWindow.webContents.send('Reload Page Cache')
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Reload Page Cache')
+            }
           }
         },
-        { type: 'separator' },
-        { role: 'toggledevtools' }
+        { type: 'separator' }
       ]
     },
     {
@@ -147,6 +182,29 @@ function createMenu () {
       ]
     }
   ]
+
+  var tabMenus = []
+  for (const i in tabs[winID]) {
+    const tab = tabs[winID][i]
+    if (i < 9) {
+      tabMenus.push({
+        label: tab.url,
+        accelerator: 'CmdOrCtrl+' + (parseInt(i) + 1) + '',
+        click: function (item, focusedWindow) {
+          if (focusedWindow) {
+            focusedWindow.webContents.send('Focus Tab', tab.name)
+          }
+        }
+      })
+    }
+  }
+
+  if (tabMenus.length > 0) {
+    tabMenus.push({type: 'separator'})
+    Array.prototype.push.apply(template[template.length - 2].submenu, tabMenus)
+  }
+
+  template[template.length - 2].submenu.push({ role: 'toggledevtools' })
 
   if (process.platform === 'darwin') {
     template.unshift({
@@ -197,7 +255,6 @@ function updateSession (host, token) {
 app.on('ready', () => {
   updateSession(electronStore.get('scrapboxHost'), electronStore.get('scrapboxToken'))
   createWindow()
-  createMenu()
 })
 
 app.on('window-all-closed', () => {
@@ -210,8 +267,10 @@ ipcMain.on('updateScrapboxToken', (event, msg) => {
   updateSession(msg.host, msg.token)
 })
 
-ipcMain.on('closeWindow', (event, msg) => {
-  BrowserWindow.getFocusedWindow().close()
+ipcMain.on('updateTabs', (event, msg) => {
+  const winID = BrowserWindow.getFocusedWindow().id
+  tabs[winID] = msg
+  createMenu(winID)
 })
 
 /**

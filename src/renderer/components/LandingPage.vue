@@ -118,6 +118,9 @@
             this.showPageCacheProgress = false
           }, 1000)
         }
+      },
+      tabs: function (val) {
+        ipcRenderer.send('updateTabs', val)
       }
     },
     computed: {
@@ -167,6 +170,7 @@
         this.showDeveloperMenu = false
         this.showOpenURL = false
         this.webView.src = url
+        this.tabs.splice(this.currentTab, 1, {name: this.currentTab, url: url})
       },
       addProject () {
         this.registeredProjects.push({
@@ -242,9 +246,6 @@
         }
         this.currentTab = activeName
         this.tabs = tabs.filter(tab => tab.name !== targetName)
-        if (this.tabs.length === 0) {
-          ipcRenderer.send('closeWindow', null)
-        }
       },
       handleTabsEdit (targetName, action) {
         if (action === 'add') {
@@ -295,8 +296,16 @@
         this.showDeveloperMenu = true
       })
 
+      ipcRenderer.on('Reload Page', (msg) => {
+        this.webView.reload()
+      })
+
       ipcRenderer.on('Reload Page Cache', (msg) => {
         this.reloadPageCache()
+      })
+
+      ipcRenderer.on('Focus Tab', (event, msg) => {
+        this.currentTab = msg
       })
     },
     mounted: function () {
