@@ -250,6 +250,7 @@
       handleTabsEdit (targetName, action) {
         if (action === 'add') {
           this.addTab()
+          document.activeElement.blur()
         }
         if (action === 'remove') {
           this.closeTab(targetName)
@@ -352,10 +353,11 @@ $tab-margin: 4px;
 }
 
 .el-tabs__new-tab {
-  margin: 10px;
+  margin: 7px;
   font-size: 20px;
   width: 26px;
-  height: 20px;
+  height: 26px;
+  line-height: 26px;
   border-style: none;
   &:hover {
     color: #ffffff;
