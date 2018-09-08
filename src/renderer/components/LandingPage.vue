@@ -2,8 +2,8 @@
   <div id="wrapper">
     <div id="tabbar-background"></div>
     <el-tabs v-model="currentTab" type="border-card" editable stretch @edit="handleTabsEdit">
-      <el-tab-pane v-for="(item, index) in tabs" :key="item.name" :name="item.name" :label="item.url">
-        <webview v-bind:src="item.url" class="scrapbox-webview" v-on:new-window="openOnBrowser"></webview>
+      <el-tab-pane v-for="(item, index) in tabs" :key="item.name" :name="item.name" :label="item.title">
+        <webview v-bind:src="item.url" class="scrapbox-webview" v-on:new-window="openOnBrowser" v-on:page-title-updated="pageTitleUpdated"></webview>
       </el-tab-pane>
     </el-tabs>
     <el-dialog id="preferences-dialog" title="Manage projects" :visible.sync="showPreferences" width="500px">
@@ -237,7 +237,8 @@
         let newTabName = ++this.currentTab + ''
         this.tabs.push({
           name: newTabName,
-          url: url
+          url: url,
+          title: 'Scrapbox'
         })
         this.currentTab = newTabName
       },
@@ -265,6 +266,10 @@
         if (action === 'remove') {
           this.closeTab(targetName)
         }
+      },
+      pageTitleUpdated (event) {
+        const ct = this.tabs[this.currentTab]
+        this.tabs.splice(this.currentTab, 1, {name: this.currentTab, url: ct.url, title: event.title})
       }
     },
     created: function () {

@@ -198,7 +198,7 @@ function createMenu (winID) {
     const tab = tabs[winID][i]
     if (i < 9) {
       tabMenus.push({
-        label: tab.url,
+        label: tab.title,
         accelerator: 'CmdOrCtrl+' + (parseInt(i) + 1) + '',
         click: function (item, focusedWindow) {
           if (focusedWindow) {
