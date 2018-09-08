@@ -357,6 +357,7 @@ $tab-margin: 4px;
   left: 0;
   height: $titlebar-height;
   background-color: $brand-color;
+  border-bottom: solid 1px darken($brand-color, 7%);
 }
 
 .el-tabs__header {
@@ -373,11 +374,11 @@ $tab-margin: 4px;
 
 .el-tabs--border-card>.el-tabs__header {
   background-color: $brand-color;
-  border-bottom: solid 1px darken($brand-color, 10%);
+  border-bottom: solid 1px darken($brand-color, 7%);
   .el-tabs__item.is-active {
-    background-color: darken($brand-color, 10%);
-    border-left: solid 1px darken($brand-color, 10%);
-    border-right: solid 1px darken($brand-color, 10%);
+    background-color: darken($brand-color, 7%);
+    border-left: solid 1px darken($brand-color, 7%);
+    border-right: solid 1px darken($brand-color, 7%);
     border-radius: 3px 3px 0 0;
   }
   .el-tabs__item {
@@ -413,12 +414,11 @@ $tab-margin: 4px;
 
 .el-tabs--border-card>.el-tabs__content {
   position: absolute;
-  top: $titlebar-height;
+  top: $titlebar-height + 1px;
   right: 0;
   left: 0;
   padding: 0;
   height: calc(100% - #{$titlebar-height+1});
-  border-top: solid 1px darken($brand-color, 10%);
 }
 
 .content-full {
