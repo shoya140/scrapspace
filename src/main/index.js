@@ -172,6 +172,16 @@ function createMenu (winID) {
             }
           }
         },
+        { type: 'separator' },
+        {
+          label: 'Toggle Tab Bar',
+          accelerator: 'Shift+CmdOrCtrl+t',
+          click: function (item, focusedWindow) {
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Toggle Tab Bar')
+            }
+          }
+        },
         { type: 'separator' }
       ]
     },

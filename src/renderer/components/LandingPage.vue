@@ -1,5 +1,6 @@
 <template>
   <div id="wrapper">
+    <div id="tabbar-background"></div>
     <el-tabs v-model="currentTab" type="border-card" editable stretch @edit="handleTabsEdit">
       <el-tab-pane v-for="(item, index) in tabs" :key="item.name" :name="item.name" :label="item.url">
         <webview v-bind:src="item.url" class="scrapbox-webview" v-on:new-window="openOnBrowser"></webview>
@@ -76,6 +77,7 @@
       return {
         tabs: [],
         currentTab: '-1',
+        showTabBar: true,
         showPreferences: false,
         showSearchPalette: false,
         showDeveloperMenu: false,
@@ -316,6 +318,22 @@
       ipcRenderer.on('Focus Tab', (event, msg) => {
         this.currentTab = msg
       })
+
+      ipcRenderer.on('Toggle Tab Bar', (event, msg) => {
+        this.showTabBar = !this.showTabBar
+        const tabbar = document.querySelector('.el-tabs__header')
+        const tabbarBG = document.querySelector('#tabbar-background')
+        const content = document.querySelector('.el-tabs--border-card>.el-tabs__content')
+        if (this.showTabBar) {
+          tabbar.classList.remove('tabbar-hidden')
+          tabbarBG.classList.remove('tabbar-hidden')
+          content.classList.remove('content-full')
+        } else {
+          tabbar.classList.add('tabbar-hidden')
+          tabbarBG.classList.add('tabbar-hidden')
+          content.classList.add('content-full')
+        }
+      })
     },
     mounted: function () {
       this.addTab()
@@ -327,13 +345,25 @@
 
 $tab-margin: 4px;
 
+#tabbar-background {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  left: 0;
+  height: $titlebar-height;
+  background-color: $brand-color;
+}
+
 .el-tabs__header {
   top: 0;
   left: 78px;
   right: 0;
   height: $titlebar-height;
   position: fixed;
-  z-index: 10;
+}
+
+.tabbar-hidden {
+  display: none !important;
 }
 
 .el-tabs--border-card>.el-tabs__header {
@@ -384,6 +414,11 @@ $tab-margin: 4px;
   padding: 0;
   height: calc(100% - #{$titlebar-height+1});
   border-top: solid 1px darken($brand-color, 10%);
+}
+
+.content-full {
+  top: 0 !important;
+  height: 100% !important;
 }
 
 .scrapbox-webview {
