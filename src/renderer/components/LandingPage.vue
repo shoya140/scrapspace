@@ -221,7 +221,15 @@
           this.$notify({
             title: 'Welcome to Scrapspace :)',
             message: 'Open Preferences and register your project.',
-            duration: 10000
+            duration: 10000,
+            offset: 30,
+            showClose: false,
+            onClick: () => {
+              this.showPreferences = true
+              setTimeout(() => {
+                this.$refs.project.focus()
+              }, 0)
+            }
           })
         }
         let newTabName = ++this.currentTab + ''
@@ -408,6 +416,10 @@ $tab-margin: 4px;
   line-height: 42px; 
   font-size: 20px; 
   color:#dddddd;
+}
+
+.el-notification {
+  cursor: pointer;
 }
 
 </style>
