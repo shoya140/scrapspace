@@ -11,6 +11,8 @@ if (typeof electronStore.get('registeredProjects') === 'undefined') {
   electronStore.set('scrapboxToken', '')
 }
 
+app.commandLine.appendSwitch('lang', 'ja')
+
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
