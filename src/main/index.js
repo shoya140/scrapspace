@@ -251,6 +251,30 @@ function createMenu (winID) {
         { role: 'quit' }
       ]
     })
+  } else {
+    template.push({
+      label: 'Properties',
+      submenu: [
+        { type: 'separator' },
+        {
+          label: 'Preferences',
+          accelerator: 'CmdOrCtrl+,',
+          click: function (item, focusedWindow) {
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Preferences')
+            }
+          }
+        },
+        {
+          label: 'Developer Menu',
+          click: function (item, focusedWindow) {
+            if (focusedWindow) {
+              focusedWindow.webContents.send('Developer Menu')
+            }
+          }
+        }
+      ]
+    })
   }
 
   const menu = Menu.buildFromTemplate(template)
