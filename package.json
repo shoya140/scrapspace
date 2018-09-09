@@ -1,6 +1,6 @@
 {
   "name": "scrapspace",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "author": "Shoya Ishimaru <shoya.ishimaru@gmail.com>",
   "description": "Workspace for Scrapbox",
   "license": "MIT",
@@ -8,6 +8,7 @@
   "scripts": {
     "build": "node .electron-vue/build.js && electron-builder",
     "build:win": "node .electron-vue/build.js && electron-builder --win",
+    "build:linux": "node .electron-vue/build.js && electron-builder --linux",
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -44,13 +45,16 @@
       ]
     },
     "mac": {
-      "icon": "static/icons/icon.icns"
+      "icon": "static/icons/icon.icns",
+      "artifactName": "${productName}-mac.${ext}"
     },
     "win": {
-      "icon": "static/icons/icon.ico"
+      "icon": "static/icons/icon.ico",
+      "artifactName": "${productName}-win.${ext}"
     },
     "linux": {
-      "icon": "static/icons"
+      "icon": "static/icons",
+      "artifactName": "${productName}-linux.${ext}"
     }
   },
   "dependencies": {
