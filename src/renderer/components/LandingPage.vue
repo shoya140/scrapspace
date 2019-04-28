@@ -452,9 +452,9 @@ $tab-margin: 4px;
 }
 
 .form-slash {
-  margin-left:-10px; 
-  line-height: 42px; 
-  font-size: 20px; 
+  margin-left:-10px;
+  line-height: 42px;
+  font-size: 20px;
   color:#dddddd;
 }
 
